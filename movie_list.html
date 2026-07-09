@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie List Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12141c;
+    --panel: #1b1f2b;
+    --panel-raised: #222738;
+    --gold: #e8b84b;
+    --gold-dim: #a3853c;
+    --text: #f1eee6;
+    --text-dim: #9aa0b4;
+    --red: #b34a4a;
+    --stub-line: #333a4f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #191d29 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 48px 20px 80px;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(36px, 6vw, 54px);
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  h1 span { color: var(--gold); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid #2a2f42;
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+
+  .panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel h2::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .field { margin-bottom: 14px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--panel-raised);
+    border: 1px solid #2f3548;
+    border-radius: 8px;
+    padding: 11px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--gold);
+  }
+
+  .error {
+    color: var(--red);
+    font-size: 12px;
+    margin-top: 6px;
+    min-height: 16px;
+  }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row .field { flex: 1; min-width: 140px; }
+
+  button {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #201705;
+    width: 100%;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-row input { flex: 1; }
+
+  .btn-secondary {
+    background: var(--panel-raised);
+    color: var(--text);
+    border: 1px solid #343b52;
+  }
+
+  .btn-secondary:hover { border-color: var(--gold-dim); }
+
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .count {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+    border: 1px dashed #333a4f;
+    border-radius: 10px;
+  }
+
+  .ticket {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--panel-raised);
+    border: 1px solid #2f3548;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ticket.highlight {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold);
+  }
+
+  .ticket-stub {
+    width: 1px;
+    align-self: stretch;
+    background: repeating-linear-gradient(to bottom, var(--stub-line) 0 6px, transparent 6px 12px);
+    margin: 0 2px;
+  }
+
+  .ticket-info { flex: 1; min-width: 0; }
+
+  .ticket-num {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold-dim);
+    font-size: 13px;
+    margin-right: 8px;
+  }
+
+  .ticket-title {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .ticket-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .ticket-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid #343b52;
+    color: var(--text-dim);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .icon-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel-raised);
+    border: 1px solid var(--gold);
+    color: var(--text);
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-6px);
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 11, 16, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10;
+  }
+
+  .modal-backdrop.show { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid #2a2f42;
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 360px;
+    width: 100%;
+  }
+
+  .modal p { font-size: 14px; line-height: 1.5; margin: 0 0 20px; }
+  .modal .actions { display: flex; gap: 10px; }
+  .modal .actions button { flex: 1; }
+
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Now Cataloging</div>
+    <h1>My Movie<span> List</span></h1>
+    <div class="subtitle">Add, search, and manage your personal collection</div>
+  </header>
+
+  <div class="panel">
+    <h2>Add a Movie</h2>
+    <div class="field">
+      <label for="title">Movie Title</label>
+      <input id="title" type="text" placeholder="e.g. Interstellar">
+      <div class="error" id="err-title"></div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="genre">Genre</label>
+        <input id="genre" type="text" placeholder="e.g. Sci-Fi">
+        <div class="error" id="err-genre"></div>
+      </div>
+      <div class="field">
+        <label for="year">Release Year</label>
+        <input id="year" type="text" inputmode="numeric" placeholder="e.g. 2014">
+        <div class="error" id="err-year"></div>
+      </div>
+    </div>
+    <button class="btn-primary" id="addBtn">Add Movie</button>
+  </div>
+
+  <div class="panel">
+    <h2>Search</h2>
+    <div class="search-row">
+      <input id="searchInput" type="text" placeholder="Search by title...">
+      <button class="btn-secondary" id="searchBtn">Search</button>
+      <button class="btn-secondary" id="clearSearchBtn">Clear</button>
+    </div>
+  </div>
+
+  <div class="list-header">
+    <h2 style="margin:0; font-family:'Playfair Display',serif; font-size:20px;">Collection</h2>
+    <div class="count" id="countLabel">0 movies</div>
+  </div>
+  <div id="listContainer"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <p id="modalText"></p>
+    <div class="actions">
+      <button class="btn-secondary" id="modalCancel">Cancel</button>
+      <button class="btn-primary" id="modalConfirm" style="background: var(--red); color: #fff;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<footer>Your collection is saved in a real database on the server — available from any device.</footer>
+
+<script>
+  // ---- Backend connection ----
+  // Change this to your deployed API's URL once it's hosted
+  // (e.g. 'https://your-app-name.onrender.com/api').
+  // Leave as-is while running the backend locally on your own machine.
+  const API_BASE = 'http://127.0.0.1:5000/api';
+
+  // ---- State ----
+  let movies = [];               // loaded from the server, not the browser
+  let highlightedId = null;
+  let pendingDeleteId = null;
+
+  const listContainer = document.getElementById('listContainer');
+  const countLabel = document.getElementById('countLabel');
+  const toast = document.getElementById('toast');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalText = document.getElementById('modalText');
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  function clearErrors() {
+    document.getElementById('err-title').textContent = '';
+    document.getElementById('err-genre').textContent = '';
+    document.getElementById('err-year').textContent = '';
+  }
+
+  // ---- API calls ----
+  async function fetchMovies() {
+    try {
+      const res = await fetch(`${API_BASE}/movies`);
+      if (!res.ok) throw new Error('Failed to load movies');
+      movies = await res.json();
+      render();
+    } catch (err) {
+      listContainer.innerHTML = `<div class="empty">Can't reach the server at ${API_BASE}.<br>Make sure the backend is running.</div>`;
+      countLabel.textContent = '';
+    }
+  }
+
+  async function addMovieRequest(title, genre, year) {
+    const res = await fetch(`${API_BASE}/movies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, genre, year })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { errors: data.errors || {} };
+    }
+    return { movie: data };
+  }
+
+  async function deleteMovieRequest(id) {
+    const res = await fetch(`${API_BASE}/movies/${id}`, { method: 'DELETE' });
+    return res.ok;
+  }
+
+  // ---- Add Movie (server validates, same rules as add_movie()) ----
+  document.getElementById('addBtn').addEventListener('click', async () => {
+    clearErrors();
+    const titleInput = document.getElementById('title');
+    const genreInput = document.getElementById('genre');
+    const yearInput = document.getElementById('year');
+
+    const title = titleInput.value.trim();
+    const genre = genreInput.value.trim();
+    const year = yearInput.value.trim();
+
+    const addBtn = document.getElementById('addBtn');
+    addBtn.disabled = true;
+    addBtn.textContent = 'Adding...';
+
+    const result = await addMovieRequest(title, genre, year);
+
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add Movie';
+
+    if (result.errors) {
+      if (result.errors.title) document.getElementById('err-title').textContent = result.errors.title;
+      if (result.errors.genre) document.getElementById('err-genre').textContent = result.errors.genre;
+      if (result.errors.year) document.getElementById('err-year').textContent = result.errors.year;
+      return;
+    }
+
+    movies.push(result.movie);
+    titleInput.value = '';
+    genreInput.value = '';
+    yearInput.value = '';
+    showToast('Your Movie is Added Successfully!');
+    render();
+  });
+
+  // ---- Search (mirrors search_movie()) ----
+  function search(query) {
+    highlightedId = null;
+    if (query) {
+      const match = movies.find(m => m.title.toLowerCase() === query.toLowerCase());
+      if (match) {
+        highlightedId = match.id;
+      } else {
+        showToast('Movie not found.');
+      }
+    }
+    render();
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    search(document.getElementById('searchInput').value.trim());
+  });
+  document.getElementById('searchInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') search(document.getElementById('searchInput').value.trim());
+  });
+  document.getElementById('clearSearchBtn').addEventListener('click', () => {
+    document.getElementById('searchInput').value = '';
+    highlightedId = null;
+    render();
+  });
+
+  // ---- Delete (mirrors delete_movie(), with confirm modal) ----
+  function requestDelete(id) {
+    pendingDeleteId = id;
+    const m = movies.find(mv => mv.id === id);
+    modalText.textContent = `Are you sure you want to delete "${m.title}" (${m.year})?`;
+    modalBackdrop.classList.add('show');
+  }
+
+  document.getElementById('modalCancel').addEventListener('click', () => {
+    modalBackdrop.classList.remove('show');
+    pendingDeleteId = null;
+    showToast('Your Movie has not been Deleted!');
+  });
+
+  document.getElementById('modalConfirm').addEventListener('click', async () => {
+    if (pendingDeleteId !== null) {
+      const ok = await deleteMovieRequest(pendingDeleteId);
+      if (ok) {
+        movies = movies.filter(m => m.id !== pendingDeleteId);
+        showToast('Your Movie is Deleted Successfully!');
+        render();
+      } else {
+        showToast('Could not delete — try again.');
+      }
+      pendingDeleteId = null;
+    }
+    modalBackdrop.classList.remove('show');
+  });
+
+  // ---- Render (mirrors view_movies() with enumerate) ----
+  function render() {
+    countLabel.textContent = `${movies.length} movie${movies.length === 1 ? '' : 's'}`;
+
+    if (movies.length === 0) {
+      listContainer.innerHTML = '<div class="empty">No movies in your current list yet. Add your first one above.</div>';
+      return;
+    }
+
+    listContainer.innerHTML = '';
+    movies.forEach((movie, i) => {
+      const isMatch = highlightedId !== null && movie.id === highlightedId;
+      const el = document.createElement('div');
+      el.className = 'ticket' + (isMatch ? ' highlight' : '');
+      el.innerHTML = `
+        <div class="ticket-info">
+          <span class="ticket-num">${String(i + 1).padStart(2, '0')}</span>
+          <span class="ticket-title">${escapeHtml(movie.title)}</span>
+          <div class="ticket-meta">${escapeHtml(movie.genre)} · ${escapeHtml(movie.year)}</div>
+        </div>
+        <div class="ticket-stub"></div>
+        <div class="ticket-actions">
+          <button class="icon-btn" title="Delete" data-id="${movie.id}">✕</button>
+        </div>
+      `;
+      listContainer.appendChild(el);
+    });
+
+    listContainer.querySelectorAll('.icon-btn').forEach(btn => {
+      btn.addEventListener('click', () => requestDelete(parseInt(btn.dataset.id, 10)));
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---- Initial load from the server ----
+  fetchMovies();
+</script>
+</body>
+</html>
